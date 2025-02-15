@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>目录</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+            background-color: #02502A;
+            color: white;
+            margin: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .work-card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            width: calc(50% - 30px);
+            box-sizing: border-box;
+            border-radius: 8px;
+            transition: transform 0.3s ease-in-out;
+            display: block;
+            cursor: pointer;
+        }
+
+        .work-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .work-card a {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Center items vertically */
+            font-size: 16px;
+            text-decoration: none;
+            color: #2c3e50;
+            padding: 10px 0;
+            width: 100%;
+        }
+
+        .work-card a:hover {
+            color: #3498db;
+        }
+
+        .work-card .date {
+            font-size: 14px;
+            color: #aaa;
+            margin-left: 15px; /* Space between title and date */
+        }
+
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+
+        .pagination button:hover {
+            background-color: #2980b9;
+        }
+
+        #search {
+            width: 300px;
+            padding: 10px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        #searchResults {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #searchResults div {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📖 目录</h1>
+
+<!-- 搜索框 -->
+<input type="text" id="search" placeholder="搜索作品..." oninput="searchWorks()">
+
+<!-- 作品列表 -->
+<div class="container" id="content"></div>
+
+<!-- 分页按钮 -->
+<div class="pagination" id="pagination"></div>
+
+<!-- 搜索结果 -->
+<div id="searchResults"></div>
+
+<script>
+    let works = [];
+    let filteredWorks = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
+    // 从 JSON 文件动态加载数据
+    fetch('../works.json')
+        .then(response => response.json())
+        .then(data => {
+            works = data.works; // 修改为读取 "works" 数组
+            // 按日期排序，日期越大越前
+            works.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return dateB - dateA; // 降序排序
+            });
+            renderPage(currentPage);
+            renderPagination();
+        })
+        .catch(err => console.error('加载作品数据失败:', err));
+
+    // 渲染作品页面
+    function renderPage(pageNumber) {
+        const worksToRender = filteredWorks.length > 0 ? filteredWorks : works;
+        const start = (pageNumber - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageWorks = worksToRender.slice(start, end);
+        const contentDiv = document.getElementById('content');
+        contentDiv.innerHTML = '';
+
+        pageWorks.forEach(work => {
+            const div = document.createElement('div');
+            div.classList.add('work-card');
+            const a = document.createElement('a');
+            a.href = work.url;
+            // 将作品的标题和日期放到同一个链接里
+            a.innerHTML = `${work.title} <span class="date">${work.date}</span>`;
+            div.appendChild(a);
+            contentDiv.appendChild(div);
+        });
+    }
+
+    // 渲染分页按钮
+    function renderPagination() {
+        const worksToRender = filteredWorks.length > 0 ? filteredWorks : works;
+        const totalPages = Math.ceil(worksToRender.length / itemsPerPage);
+        const paginationDiv = document.getElementById('pagination');
+        paginationDiv.innerHTML = '';
+
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement('button');
+            button.textContent = i;
+            button.onclick = () => {
+                currentPage = i;
+                renderPage(currentPage);
+            };
+            paginationDiv.appendChild(button);
+        }
+    }
+
+    // 处理搜索功能
+    function searchWorks() {
+        const query = document.getElementById('search').value.toLowerCase();
+        filteredWorks = works.filter(work => work.title.toLowerCase().includes(query));
+        currentPage = 1;  // 搜索时从第一页开始
+        renderPage(currentPage);
+        renderPagination();
+    }
+</script>
+
+</body>
+</html>
