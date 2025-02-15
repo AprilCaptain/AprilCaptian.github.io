@@ -129,7 +129,7 @@
     const itemsPerPage = 10;
 
     // 从 JSON 文件动态加载数据
-    fetch('../works.json')
+    fetch('./works.json')
         .then(response => response.json())
         .then(data => {
             works = data.poetrys; // 修改为读取 "works" 数组
